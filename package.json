@@ -1,7 +1,8 @@
 {
   "name": "my-site",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
-    "mongodb": "^6.0.0"
+    "@netlify/database": "latest"
   }
 }
