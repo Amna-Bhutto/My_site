@@ -1,20 +1,18 @@
-const { MongoClient } = require("mongodb");
-const client = new MongoClient(process.env.MONGODB_URI);
+import { getDatabase } from "@netlify/database";
 
-exports.handler = async (event) => {
-  await client.connect();
-  const notes = client.db("myapp").collection("notes");
+const db = getDatabase();
 
-  if (event.httpMethod === "GET") {
-    const all = await notes.find().sort({ createdAt: -1 }).toArray();
-    return { statusCode: 200, body: JSON.stringify(all) };
+export default async (req) => {
+  if (req.method === "GET") {
+    const notes = await db.sql`SELECT * FROM notes ORDER BY created_at DESC`;
+    return Response.json(notes);
   }
 
-  if (event.httpMethod === "POST") {
-    const { text } = JSON.parse(event.body);
-    await notes.insertOne({ text, createdAt: new Date() });
-    return { statusCode: 201, body: JSON.stringify({ ok: true }) };
+  if (req.method === "POST") {
+    const { text } = await req.json();
+    await db.sql`INSERT INTO notes (text) VALUES (${text})`;
+    return Response.json({ ok: true }, { status: 201 });
   }
 
-  return { statusCode: 405, body: "Method not allowed" };
+  return new Response("Method not allowed", { status: 405 });
 };
